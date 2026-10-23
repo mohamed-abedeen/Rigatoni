@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Toni the Rigatoni</title>
+<link rel="stylesheet" href="toni.css">
+<style>
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh; background: #ecebe8; color: var(--text); user-select: none;
+    font: 15px/1.4 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;
+  }
+  .stage { width: 340px; background: #f6f5f2; border-radius: 28px; padding: 22px 20px 16px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 1px 0 var(--line), 0 20px 50px rgba(0,0,0,.06); }
+  .pose-pill { background: #fff; border-radius: 999px; padding: 5px 16px; font-weight: 700; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .stage .toni { width: 148px; height: 214px; margin-top: 4px; }
+  .ground { width: 130px; height: 12px; border-radius: 50%; background: radial-gradient(rgba(0,0,0,.13), transparent 70%); margin-top: -10px; }
+  .name { font-weight: 800; font-size: 22px; line-height: 1.1; margin-top: 12px; text-align: center; }
+  .name small { display: block; font-weight: 500; font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .poses { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 12px; }
+  .poses button { font-size: 12px; padding: 4px 10px; }
+  .poses button[aria-pressed="true"] { background: var(--text); color: #fff; }
+  .panel { margin-top: 12px; text-align: center; }
+  .clock-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+  .clock { font: 700 42px/1.05 "Cascadia Mono", Consolas, monospace; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; max-width: 380px; }
+  button, select { font: inherit; font-weight: 600; border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer; background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  button.dark { background: var(--text); color: #fff; box-shadow: none; }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  label.check { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-top: 12px; justify-content: center; }
+  .stats, .hint { margin-top: 8px; color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="pose-pill" id="pose-pill">Idle</div>
+  <div id="hero"></div>
+  <div class="ground"></div>
+  <div class="name">Toni<small>the Rigatoni</small></div>
+  <div class="poses" id="poses"></div>
+</div>
+
+<div class="panel">
+  <div class="clock-label" id="clock-label">Next stretch in</div>
+  <div class="clock" id="clock">--:--</div>
+  <div class="controls">
+    <button class="dark" id="now">Stretch now</button>
+    <button id="pause">Pause</button>
+    <select id="interval" aria-label="Reminder interval">
+      <option value="20">Every 20 min</option>
+      <option value="30">Every 30 min</option>
+      <option value="45">Every 45 min</option>
+      <option value="60">Every 60 min</option>
+      <option value="1">Every 1 min (test)</option>
+    </select>
+    <button id="sound">Sound: on</button>
+  </div>
+  <label class="check"><input type="checkbox" id="login"> Start Toni when Windows starts</label>
+  <div class="stats" id="stats"></div>
+  <div class="hint">Closing this window keeps Toni running in the tray.</div>
+</div>
+
+<script src="toni.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const hero = makeToni(); $("hero").appendChild(hero);
+let state = null;
+
+function showPose(p) {
+  setPose(hero, p);
+  $("pose-pill").textContent = POSES.find(x => x[0] === p)[1];
+  [...$("poses").children].forEach(b => b.setAttribute("aria-pressed", b.dataset.p === p));
+}
+POSES.forEach(([p, label]) => {
+  const b = document.createElement("button");
+  b.textContent = label; b.dataset.p = p; b.onclick = () => showPose(p);
+  $("poses").appendChild(b);
+});
+showPose("wave");
+setTimeout(() => showPose("idle"), 2600);
+
+const fmtClock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
+
+function render() {
+  if (!state) return;
+  $("interval").value = String(state.interval);
+  $("sound").textContent = "Sound: " + (state.sound ? "on" : "off");
+  $("pause").textContent = state.paused ? "Resume" : "Pause";
+  $("login").checked = state.openAtLogin;
+  const n = state.stats.total;
+  $("stats").textContent = n ? `${n} stretch${n === 1 ? "" : "es"} today` : "No stretches yet today.";
+  tick();
+}
+
+function tick() {
+  if (!state) return;
+  if (state.paused) { $("clock-label").textContent = "Paused"; $("clock").textContent = fmtClock(state.pausedLeft); return; }
+  $("clock-label").textContent = "Next stretch in";
+  $("clock").textContent = state.nextAt ? fmtClock(state.nextAt - Date.now()) : "now";
+}
+
+toni.on("state", s => { state = s; render(); });
+toni.invoke("state:get").then(s => { state = s; render(); });
+setInterval(tick, 1000);
+
+$("now").onclick = () => toni.send("remind:now");
+$("pause").onclick = () => toni.send("set", { paused: !state.paused });
+$("interval").onchange = e => toni.send("set", { interval: Number(e.target.value) });
+$("sound").onclick = () => toni.send("set", { sound: !state.sound });
+$("login").onchange = e => toni.send("set", { openAtLogin: e.target.checked });
+</script>
+</body>
+</html>

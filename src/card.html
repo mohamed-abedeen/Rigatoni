@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Toni</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="toni.css">
+<style>
+  html, body { margin: 0; background: transparent; overflow: hidden; user-select: none; }
+  body { font: 15px/1.4 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; color: var(--text); }
+
+  /* window is a little bigger than the card so the shadow has room */
+  .card {
+    position: absolute; top: 12px; right: 22px; width: 430px;
+    background: #fff; border-radius: 22px; padding: 12px; overflow: hidden;
+    box-shadow: 0 0 0 1px var(--line), 0 10px 26px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.06);
+    transform: translateX(calc(100% + 40px)); transition: transform .6s cubic-bezier(.2,1.25,.35,1);
+    display: flex; gap: 14px;
+  }
+  .card.show { transform: translateX(0); }
+  .card.leaving { transition: transform .45s cubic-bezier(.6,0,.8,.4); transform: translateX(calc(100% + 40px)); }
+  .thumb { flex: 0 0 104px; height: 112px; border-radius: 15px; background: var(--thumb); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .thumb .toni { width: 76px; height: 108px; margin-top: 4px; }
+  .views { flex: 1; min-width: 0; }
+  .view { transition: opacity .35s, transform .35s; }
+  .view[hidden] { display: none; }
+  .view.fade { opacity: 0; transform: translateY(4px); }
+
+  .intro { display: flex; flex-direction: column; justify-content: center; height: 112px; }
+  .intro .pre { font-weight: 700; font-size: 15px; }
+  .intro .big { font: 900 34px/1 Nunito, "Arial Rounded MT Bold", "Segoe UI Black", sans-serif; color: var(--orange); letter-spacing: -.5px; margin-top: 2px; }
+  .intro .squig { display: block; width: 112px; height: 10px; margin-top: 1px; }
+  .intro .squig path { stroke: var(--orange); stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-dasharray: 140; stroke-dashoffset: 140; }
+  .card.show .intro .squig path { animation: draw .7s .35s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .intro .note { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+  .ex { display: flex; flex-direction: column; min-height: 112px; }
+  .ex-head { display: flex; align-items: baseline; gap: 8px; }
+  .ex-title { font-weight: 700; font-size: 17px; flex: 1; letter-spacing: -.2px; }
+  .ex-count { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+  .ex-desc { font-size: 13.5px; color: #3a3a3a; margin-top: 2px; }
+  .ex-reps { color: var(--red); font-size: 13.5px; font-weight: 600; margin-top: 3px; }
+  .ex-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; }
+  .foot-btns { display: flex; gap: 8px; }
+  button { font: inherit; font-weight: 600; border: 0; border-radius: 999px; cursor: pointer; padding: 5px 15px; font-size: 13.5px; background: var(--pill); color: var(--text); }
+  button.dark { background: var(--text); color: #fff; }
+  button.wide { padding: 5px 26px; }
+  button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .ex-side { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .howto-btn { background: none; padding: 0; font-size: 13px; color: #333; }
+  .howto-btn::after { content: ""; display: inline-block; width: 5px; height: 5px; margin: 0 2px 3px 6px; border: solid #333; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+  .ex-time { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .ex-done { display: flex; align-items: center; gap: 6px; color: var(--green); font-weight: 600; font-size: 13.5px; animation: pop .4s cubic-bezier(.3,1.6,.5,1); }
+  .ex-done svg { width: 18px; height: 18px; }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } }
+  .steps { font-size: 12.5px; color: #444; margin: 8px 0 0; padding-left: 18px; }
+  .steps[hidden] { display: none; }
+  .bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: var(--red); transition: width .25s linear, background .3s; }
+  .bar.ok { background: var(--green); }
+  .close { position: absolute; top: 5px; left: 5px; width: 20px; height: 20px; padding: 0; border-radius: 50%; background: #fff; color: #888; font-size: 11px; line-height: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.2); opacity: 0; transition: opacity .2s; }
+  .card:hover .close { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="card" id="card" role="alertdialog" aria-label="Stretch reminder">
+  <div class="thumb" id="thumb"></div>
+  <div class="views">
+    <div class="view intro" id="v-intro">
+      <div class="pre">It's time to</div>
+      <div class="big">stretch!</div>
+      <svg class="squig" viewBox="0 0 112 10" aria-hidden="true"><path d="M2 5 Q8 1 14 5 T26 5 T38 5 T50 5 T62 5 T74 5 T86 5 T98 5 T110 5"/></svg>
+      <div class="note">Quick one while you're here.</div>
+    </div>
+    <div class="view ex" id="v-ex" hidden>
+      <div class="ex-head"><div class="ex-title" id="ex-title"></div><div class="ex-count" id="ex-count"></div></div>
+      <div class="ex-desc" id="ex-desc"></div>
+      <div class="ex-reps" id="ex-reps"></div>
+      <ol class="steps" id="steps" hidden></ol>
+      <div class="ex-foot">
+        <div class="foot-btns" id="foot-btns"></div>
+        <div class="ex-side"><button class="howto-btn" id="howto">How to</button><div class="ex-time" id="ex-time"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="bar" id="bar"></div>
+  <button class="close" id="close" title="Snooze 5 minutes" aria-label="Snooze">✕</button>
+</div>
+
+<script src="toni.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const thumb = makeToni(); $("thumb").appendChild(thumb);
+const card = $("card");
+let ex = null, phase = "hidden", timer = null, runStart = 0, data = null;
+
+const fmt = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+
+// keep the window exactly as tall as the card (plus shadow room)
+new ResizeObserver(() => toni.send("card:resize", card.offsetHeight + 40)).observe(card);
+
+function swapView(from, to) {
+  from.classList.add("fade");
+  setTimeout(() => {
+    from.hidden = true; from.classList.remove("fade");
+    to.hidden = false; to.classList.add("fade"); void to.offsetWidth;
+    setTimeout(() => to.classList.remove("fade"), 20);
+  }, 300);
+}
+
+function footer(btns) {
+  const box = $("foot-btns"); box.innerHTML = "";
+  btns.forEach(([label, fn, cls]) => {
+    const b = document.createElement("button"); b.textContent = label; if (cls) b.className = cls; b.onclick = fn; box.appendChild(b);
+  });
+}
+
+function fillExercise() {
+  $("ex-title").textContent = ex.title;
+  const n = data.stats.by[ex.id] || 0;
+  $("ex-count").textContent = n ? `${n} today` : "";
+  $("ex-desc").textContent = ex.desc;
+  $("ex-reps").textContent = ex.reps;
+  $("steps").innerHTML = ex.steps.map(s => `<li>${s}</li>`).join("");
+  $("steps").hidden = true;
+  $("ex-time").textContent = ex.secs >= 60 ? `${ex.secs / 60} min` : `${ex.secs} sec`;
+  $("bar").style.width = "0"; $("bar").classList.remove("ok");
+  footer([["Start", start, "dark"], ["Snooze", snooze]]);
+}
+
+toni.on("card:show", d => {
+  data = d; ex = EXERCISES[d.index % EXERCISES.length]; phase = "intro";
+  clearInterval(timer);
+  fillExercise();
+  $("v-intro").hidden = false; $("v-ex").hidden = true;
+  setPose(thumb, "wave");
+  card.classList.remove("show", "leaving"); void card.offsetWidth;
+  card.classList.add("show");
+  if (d.sound) chime();
+  setTimeout(() => {
+    if (phase !== "intro") return;
+    phase = "ex";
+    swapView($("v-intro"), $("v-ex"));
+    setTimeout(() => setPose(thumb, ex.pose), 300);
+  }, 2600);
+});
+
+function start() {
+  phase = "run"; runStart = Date.now();
+  setPose(thumb, ex.pose);
+  footer([["Done", done, "dark wide"], ["Stop", stop]]);
+  clearInterval(timer);
+  const step = () => {
+    const el = Date.now() - runStart, total = ex.secs * 1000;
+    $("bar").style.width = Math.min(100, el / total * 100) + "%";
+    $("ex-time").textContent = `${fmt(total - el)} left`;
+    if (el >= total) done();
+  };
+  step(); timer = setInterval(step, 250);
+}
+
+function stop() { clearInterval(timer); phase = "ex"; fillExercise(); }
+
+async function done() {
+  if (phase === "done") return;
+  clearInterval(timer); phase = "done";
+  const stats = await toni.invoke("card:done", ex.id);
+  $("bar").classList.add("ok"); $("bar").style.width = "100%";
+  $("foot-btns").innerHTML = `<div class="ex-done"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="currentColor"/><path d="M6 10.4 L8.8 13 L14 7.4" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Nice! That's ${stats.total} today.</div>`;
+  $("ex-time").textContent = "";
+  $("ex-count").textContent = `${stats.by[ex.id]} today`;
+  setPose(thumb, "thumbs");
+  if (data.sound) chime([660, 880, 1175]);
+  setTimeout(hide, 2600);
+}
+
+function snooze() { toni.send("card:snooze"); hide(); }
+
+function hide() {
+  clearInterval(timer);
+  card.classList.add("leaving");
+  setTimeout(() => { card.classList.remove("show", "leaving"); phase = "hidden"; toni.send("card:hidden"); }, 460);
+}
+
+$("howto").onclick = () => { $("steps").hidden = !$("steps").hidden; };
+$("close").onclick = snooze;
+</script>
+</body>
+</html>

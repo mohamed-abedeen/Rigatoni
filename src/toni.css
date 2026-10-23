@@ -1,0 +1,77 @@
+:root {
+  /* Toni's palette, from the Noodle Cast sheet */
+  --body: #EDBB5F;
+  --light: #F8D894;
+  --shade: #E2A84E;
+  --ridges: #CF9640;
+  --blush: #F2A08A;
+  --ink: #2A1D17;
+
+  --text: #1b1b1b;
+  --muted: #6b6b6b;
+  --thumb: #f4efe6;
+  --pill: #efefef;
+  --red: #d9411e;
+  --orange: #dc5a22;
+  --green: #2f9e5b;
+  --line: rgba(0,0,0,.06);
+}
+
+
+.toni { overflow: visible; display: block; }
+.toni * { transition: transform .45s cubic-bezier(.3,1.4,.5,1), opacity .3s; }
+.toni .ink { stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; fill: none; }
+.toni .bodygrp { transform-origin: 100px 205px; }
+.toni .arm-l { transform: translate(64px, 122px); }
+.toni .arm-r { transform: translate(136px, 122px); }
+.toni .leg-l { transform: translate(84px, 200px); }
+.toni .leg-r { transform: translate(116px, 200px); }
+.toni .arm-l .sw { transform: rotate(var(--al, 14deg)); }
+.toni .arm-r .sw { transform: rotate(var(--ar, -14deg)); }
+.toni .leg-l .sw { transform: rotate(var(--ll, 2deg)); }
+.toni .leg-r .sw { transform: rotate(var(--lr, -2deg)); }
+.toni .eyes { transform-origin: 100px 94px; animation: blink 4.2s infinite; }
+.toni .profile, .toni .arrow, .toni .motion, .toni .thumb-up, .toni .arms-up { opacity: 0; }
+
+/* poses */
+.pose-wave    { --ar: -150deg; }
+.pose-wave .arm-r .sw { animation: wave .9s ease-in-out infinite; }
+.pose-stretch .arm { opacity: 0; }
+.pose-stretch .arms-up { opacity: 1; }
+.pose-stretch .bodygrp { animation: arch 3s ease-in-out infinite; }
+.pose-thumbs  { --ar: -162deg; }
+.pose-thumbs .thumb-up { opacity: 1; }
+.pose-thumbs .bodygrp { animation: hop .9s ease-in-out 2; }
+.pose-chin .front { opacity: 0; }
+.pose-chin .profile, .pose-chin .arrow { opacity: 1; }
+.pose-chin .arm-l { opacity: 0; }
+.pose-chin .arm-r { transform: translate(68px, 126px); }
+.pose-chin { --ar: 16deg; }
+.pose-chin .bodygrp { animation: chin 2.6s ease-in-out infinite; }
+.pose-chin .arrow { animation: nudge 2.6s ease-in-out infinite; }
+.pose-neck .bodygrp { animation: neck 4s ease-in-out infinite; }
+.pose-walk .motion { opacity: 1; }
+.pose-walk .motion line { animation: whoosh .7s linear infinite; }
+.pose-walk .motion line:nth-child(2) { animation-delay: -.23s; }
+.pose-walk .motion line:nth-child(3) { animation-delay: -.46s; }
+.pose-walk .bodygrp { animation: bob .42s ease-in-out infinite alternate; }
+.pose-walk .leg-l .sw { animation: stepA .84s ease-in-out infinite; }
+.pose-walk .leg-r .sw { animation: stepB .84s ease-in-out infinite; }
+.pose-walk .arm-l .sw { animation: stepB .84s ease-in-out infinite; }
+.pose-walk .arm-r .sw { animation: stepA .84s ease-in-out infinite; }
+.pose-idle .bodygrp { animation: breathe 3.2s ease-in-out infinite; }
+
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+@keyframes wave { 0%,100% { transform: rotate(-138deg); } 50% { transform: rotate(-168deg); } }
+@keyframes arch { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-7deg); } }
+@keyframes hop { 50% { transform: translateY(-10px); } }
+@keyframes chin { 0%,15%,100% { transform: skewX(0); } 45%,70% { transform: skewX(10deg); } }
+@keyframes nudge { 0%,15%,100% { transform: translateX(0); opacity: 1; } 45%,70% { transform: translateX(-9px); opacity: .45; } }
+@keyframes neck { 0%,100% { transform: rotate(0); } 20%,40% { transform: rotate(-9deg); } 60%,80% { transform: rotate(9deg); } }
+@keyframes bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+@keyframes stepA { 0%,100% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } }
+@keyframes stepB { 0%,100% { transform: rotate(20deg); } 50% { transform: rotate(-20deg); } }
+@keyframes whoosh { from { transform: translateX(8px); opacity: 0; } 30% { opacity: 1; } to { transform: translateX(-14px); opacity: 0; } }
+@keyframes breathe { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.015) translateY(-1px); } }
+
+@media (prefers-reduced-motion: reduce) { .toni * { animation: none !important; transition: none !important; } }

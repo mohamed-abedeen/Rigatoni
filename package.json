@@ -1,0 +1,16 @@
+{
+  "name": "toni",
+  "productName": "Toni",
+  "version": "1.0.0",
+  "description": "Toni the Rigatoni reminds you to sit up straight every 20 minutes.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-packager . Toni --platform=win32 --arch=x64 --icon=assets/toni.ico --out=dist --overwrite --ignore=^/dist --ignore=^/tools --asar"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^45.0.0"
+  }
+}
