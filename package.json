@@ -7,7 +7,8 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "package": "electron-packager . Toni --platform=win32 --arch=x64 --icon=assets/toni.ico --out=dist --overwrite --ignore=^/dist --ignore=^/tools --asar"
+    "package": "electron-packager . Toni --platform=win32 --arch=x64 --icon=assets/toni.ico --out=dist --overwrite --ignore=^/dist --ignore=^/tools --asar",
+    "package:mac": "electron-packager . Toni --platform=darwin --arch=arm64,x64 --icon=assets/toni.icns --out=dist --overwrite --ignore=^/dist --ignore=^/tools --asar"
   },
   "devDependencies": {
     "@electron/packager": "^20.3.0",
