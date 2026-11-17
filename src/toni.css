@@ -75,3 +75,6 @@
 @keyframes breathe { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.015) translateY(-1px); } }
 
 @media (prefers-reduced-motion: reduce) { .toni * { animation: none !important; transition: none !important; } }
+
+/* paused while the window is hidden, so Toni uses no CPU in the background */
+html.asleep *, html.asleep *::before, html.asleep *::after { animation-play-state: paused !important; }

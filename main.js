@@ -44,6 +44,7 @@ function createMain(show) {
   });
   mainWin.loadFile(path.join(__dirname, "src", "app.html"));
   mainWin.on("close", e => { if (!run.quitting) { e.preventDefault(); mainWin.hide(); } });
+  sleepWhenHidden(mainWin, true);
   if (show) mainWin.once("ready-to-show", () => mainWin.show());
 }
 
@@ -56,7 +57,20 @@ function createCard() {
   });
   // "screen-saver" keeps the card above normal windows and most full-screen apps
   cardWin.setAlwaysOnTop(true, "screen-saver");
+  sleepWhenHidden(cardWin);
   cardWin.loadFile(path.join(__dirname, "src", "card.html"));
+}
+
+// Windows keep animating (and burning GPU) unless told to stop, so rest
+// whenever nobody can be looking: hidden, minimized, or (main window) not in front.
+function sleepWhenHidden(win, needFocus) {
+  const update = () => {
+    if (win.isDestroyed()) return;
+    const awake = win.isVisible() && !win.isMinimized() && (!needFocus || win.isFocused());
+    win.webContents.executeJavaScript(`document.documentElement.classList.toggle("asleep", ${!awake})`).catch(() => {});
+  };
+  win.webContents.on("did-finish-load", update);
+  for (const ev of ["show", "hide", "minimize", "restore", "focus", "blur"]) win.on(ev, update);
 }
 
 function showMain() {
@@ -109,7 +123,7 @@ function refreshTray() {
       label: `Every ${m} minutes`, type: "radio", checked: cfg.interval === m, click: () => setSettings({ interval: m }),
     })) },
     { label: "Sound", type: "checkbox", checked: cfg.sound, click: () => setSettings({ sound: !cfg.sound }) },
-    { label: "Start with Windows", type: "checkbox", checked: openAtLogin(), click: () => setSettings({ openAtLogin: !openAtLogin() }) },
+    { label: process.platform === "darwin" ? "Start at login" : "Start with Windows", type: "checkbox", checked: openAtLogin(), click: () => setSettings({ openAtLogin: !openAtLogin() }) },
     { type: "separator" },
     { label: "Open Toni", click: showMain },
     { label: "Quit", click: () => { run.quitting = true; app.quit(); } },
@@ -148,6 +162,7 @@ ipcMain.on("card:hidden", () => {
 // ---------- app ----------
 // "Toni.exe --remind-now" pops the card right away, even if Toni is already running
 app.on("second-instance", (_e, argv) => argv.includes("--remind-now") ? remind() : showMain());
+app.on("activate", showMain); // clicking the Dock icon
 app.on("before-quit", () => { run.quitting = true; });
 app.on("window-all-closed", e => e.preventDefault());
 
@@ -155,7 +170,7 @@ app.whenReady().then(() => {
   createCard();
   createMain(!process.argv.includes("--hidden"));
 
-  tray = new Tray(nativeImage.createFromPath(asset("tray.png")));
+  tray = new Tray(nativeImage.createFromPath(asset(process.platform === "darwin" ? "tray-mac.png" : "tray.png")));
   tray.on("click", showMain);
 
   schedule();
